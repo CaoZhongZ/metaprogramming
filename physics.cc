@@ -2,8 +2,10 @@
 #include <boost/mpl/transform.hpp>
 #include <boost/mpl/equal.hpp>
 #include <boost/static_assert.hpp>
+#include <boost/mpl/placeholders.hpp>
 #include <iostream>
 
+using namespace boost::mpl::placeholders;
 
 typedef boost::mpl::vector_c<int,1,0,0,0,0,0,0> mass;
 typedef boost::mpl::vector_c<int,0,1,0,0,0,0,0> length;  // or position
@@ -42,13 +44,28 @@ struct plus_f {
     };
 };
 
+struct minus_f {
+    template <class T1, class T2>
+    struct apply : boost::mpl::minus<T1, T2> {
+    };
+};
+
 template <class T, class D1, class D2>
-quantity <T, typename boost::mpl::transform<D1,D2,plus_f>::type>
+quantity <T, typename boost::mpl::transform<D1,D2,boost::mpl::plus<_1,_2> >::type>
 operator *(quantity<T, D1> x, quantity<T, D2> y)
 {
-    typedef typename boost::mpl::transform<D1,D2,plus_f>::type dim;
+    typedef typename boost::mpl::transform<D1,D2,boost::mpl::plus<_1,_2> >::type dim;
     return quantity<T, dim>(x.value() * y.value());
 }
+
+template <class T, class D1, class D2>
+quantity <T, typename boost::mpl::transform<D1,D2,plus_f>::type>
+operator /(quantity<T, D1> x, quantity<T, D2> y)
+{
+    typedef typename boost::mpl::transform<D1,D2,minus_f>::type dim;
+    return quantity<T, dim>(x.value() * y.value());
+}
+
 
 int main()
 {
